@@ -1,7 +1,7 @@
-// @ts-ignore - Deno global types are provided by Supabase Edge Runtime
-// import "@supabase/functions-js/edge-runtime.d.ts"
-// @ts-ignore - Deno npm: specifier
-import { GoogleGenAI } from "npm:@google/genai@^1.0.0"
+// Setup type definitions for Supabase Edge Runtime
+import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+// @ts-ignore - Deno remote import
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@^0.21.0"
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -21,8 +21,8 @@ Deno.serve(async (req: Request) => {
             throw new Error('Missing GEMINI_API_KEY environment variable')
         }
 
-        // Initialize the GoogleGenAI client
-        const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
+        // Initialize the GoogleGenerativeAI client
+        const ai = new GoogleGenerativeAI(GEMINI_API_KEY)
         
         const { content } = await req.json()
 
@@ -67,12 +67,10 @@ Text: "${content}"
 `
 
         // Call the Gemini API. Using gemini-2.5-flash
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-        })
-
-        const textResponse = response.text
+        const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' })
+        const generationResult = await model.generateContent(prompt)
+        const response = await generationResult.response
+        const textResponse = response.text()
 
         // Parse the JSON response (clean up markdown if present)
         const jsonMatch = textResponse?.match(/\{[\s\S]*\}/)

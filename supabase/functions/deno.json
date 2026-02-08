@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "lib": ["deno.window", "deno.unstable"]
+    "lib": ["deno.ns", "deno.window", "deno.unstable"]
   },
   "imports": {
-    "@google/genai": "npm:@google/genai@^1.0.0",
+    "@google/generative-ai": "https://esm.sh/@google/generative-ai@^0.21.0",
     "@supabase/functions-js/edge-runtime.d.ts": "jsr:@supabase/functions-js/edge-runtime.d.ts"
   }
 }
