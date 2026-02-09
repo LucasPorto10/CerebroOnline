@@ -60,7 +60,7 @@ export function RecentEntries() {
 
     if (isLoading) {
         return (
-            <div className="text-center text-slate-400 py-10">
+            <div className="text-center text-muted-foreground py-10">
                 <Clock className="h-5 w-5 mx-auto mb-2 animate-pulse" />
                 Carregando...
             </div>

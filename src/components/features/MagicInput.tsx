@@ -72,7 +72,7 @@ export function MagicInput({ onSend, disabled }: MagicInputProps) {
                         <span className="text-xs font-semibold uppercase tracking-wider">Captura Inteligente</span>
                     </div>
                     <div className="flex-1" />
-                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <Sparkles className="h-3 w-3" />
                         <span>Gemini AI</span>
                     </div>
@@ -99,7 +99,7 @@ export function MagicInput({ onSend, disabled }: MagicInputProps) {
                             <motion.div 
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-medium"
+                                className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-xl text-sm font-medium"
                             >
                                 <Loader2 className="h-4 w-4 animate-spin" />
                                 <span>Processando...</span>
@@ -124,13 +124,13 @@ export function MagicInput({ onSend, disabled }: MagicInputProps) {
 
                 {/* Keyboard hint */}
                 <div className={cn(
-                    "flex items-center justify-center gap-2 py-2 border-t border-slate-50 text-xs text-slate-400 transition-opacity",
+                    "flex items-center justify-center gap-2 py-2 border-t border-border text-xs text-muted-foreground transition-opacity",
                     isFocused ? "opacity-100" : "opacity-50"
                 )}>
-                    <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-500 font-mono">Enter</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-muted rounded text-muted-foreground font-mono">Enter</kbd>
                     <span>para enviar</span>
-                    <span className="text-slate-300">|</span>
-                    <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-500 font-mono">Shift + Enter</kbd>
+                    <span className="text-border">|</span>
+                    <kbd className="px-1.5 py-0.5 bg-muted rounded text-muted-foreground font-mono">Shift + Enter</kbd>
                     <span>nova linha</span>
                 </div>
             </div>

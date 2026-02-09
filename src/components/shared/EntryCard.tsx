@@ -38,7 +38,7 @@ export const EntryCard = forwardRef<HTMLDivElement, EntryCardProps>(({
         if (entry.status === 'in_progress') {
             return <CircleDot className="h-5 w-5 text-blue-500" />
         }
-        return <Circle className="h-5 w-5 text-slate-300 group-hover:text-indigo-400 transition-colors" />
+        return <Circle className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
     }
 
     return (
@@ -84,12 +84,12 @@ export const EntryCard = forwardRef<HTMLDivElement, EntryCardProps>(({
                     {showCategory && categoryName && (
                         <span className={cn(
                             "text-[10px] px-2 py-0.5 rounded-full font-medium",
-                            categoryColor || "bg-slate-100 text-slate-600"
+                            categoryColor || "bg-muted text-muted-foreground"
                         )}>
                             {categoryName}
                         </span>
                     )}
-                    <span className="text-xs text-slate-400 flex items-center gap-1">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true, locale: ptBR })}
                     </span>
@@ -105,7 +105,7 @@ export const EntryCard = forwardRef<HTMLDivElement, EntryCardProps>(({
             {onEdit && (
                 <button
                     onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                    className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-all"
+                    className="opacity-0 group-hover:opacity-100 p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
                 >
                     <Pencil className="h-4 w-4" />
                 </button>

@@ -150,8 +150,8 @@ export function KanbanView() {
                             <LayoutGrid className="h-6 w-6" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold tracking-tight text-slate-900">Kanban</h2>
-                            <p className="text-sm text-slate-500">
+                            <h2 className="text-2xl font-bold tracking-tight text-foreground">Kanban</h2>
+                            <p className="text-sm text-muted-foreground">
                                 Arraste as tarefas entre as colunas
                             </p>
                         </div>
@@ -181,13 +181,13 @@ export function KanbanView() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50"
+                        className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-border rounded-2xl bg-muted/30"
                     >
-                        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                            <LayoutGrid className="h-7 w-7 text-slate-300" />
+                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                            <LayoutGrid className="h-7 w-7 text-muted-foreground" />
                         </div>
-                        <p className="font-medium text-slate-500">Nenhuma tarefa ainda</p>
-                        <p className="text-sm text-slate-400 mt-1">
+                        <p className="font-medium text-muted-foreground">Nenhuma tarefa ainda</p>
+                        <p className="text-sm text-muted-foreground/80 mt-1">
                             Use o Magic Input para criar tarefas
                         </p>
                     </motion.div>
@@ -257,7 +257,7 @@ function KanbanColumn({
                         {column.title}
                     </span>
                     <span className={cn(
-                        "text-xs px-2.5 py-0.5 rounded-full font-bold bg-white/50",
+                        "text-xs px-2.5 py-0.5 rounded-full font-bold bg-background/80 backdrop-blur-sm",
                         column.color
                     )}>
                         {entries.length}
@@ -325,8 +325,8 @@ function KanbanCard({ entry, index, onDragStart, onDragEnd, onEdit, onDelete }: 
             onDragEnd={onDragEnd}
             onClick={onEdit}
             className={cn(
-                "group bg-white rounded-xl p-4 shadow-sm border cursor-grab active:cursor-grabbing hover:shadow-md transition-all relative overflow-hidden",
-                priority === 'urgent' ? 'border-rose-200' : 'border-slate-200/80'
+                "group bg-card rounded-xl p-4 shadow-sm border cursor-grab active:cursor-grabbing hover:shadow-md transition-all relative overflow-hidden",
+                priority === 'urgent' ? 'border-rose-200' : 'border-border'
             )}
         >
             {/* Priority Stripe for Urgent/High */}
@@ -360,7 +360,7 @@ function KanbanCard({ entry, index, onDragStart, onDragEnd, onEdit, onDelete }: 
                     </div>
 
                     {/* Content */}
-                    <p className="text-sm font-medium text-slate-800 line-clamp-3 mb-2">
+                    <p className="text-sm font-medium text-foreground line-clamp-3 mb-2">
                         {entry.content}
                     </p>
                     
@@ -368,7 +368,7 @@ function KanbanCard({ entry, index, onDragStart, onDragEnd, onEdit, onDelete }: 
                     {(entry.metadata as any)?.tags && (
                         <div className="flex flex-wrap gap-1 mb-3">
                             {(entry.metadata as any).tags.slice(0, 2).map((tag: string) => (
-                                <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded border border-slate-100">
+                                <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-muted text-muted-foreground rounded border border-border">
                                     {tag}
                                 </span>
                             ))}
@@ -376,9 +376,9 @@ function KanbanCard({ entry, index, onDragStart, onDragEnd, onEdit, onDelete }: 
                     )}
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-50">
+                    <div className="flex items-center justify-between pt-2 border-t border-border">
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true, locale: ptBR })}
                             </span>

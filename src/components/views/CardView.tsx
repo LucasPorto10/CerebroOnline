@@ -92,8 +92,8 @@ export function CardView({ categorySlug, title }: CardViewProps) {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">{title}</h2>
-                        <p className="text-sm text-slate-500 mt-1">
+                        <h2 className="text-2xl font-bold tracking-tight text-foreground">{title}</h2>
+                        <p className="text-sm text-muted-foreground mt-1">
                             {filteredEntries?.length || 0} itens
                         </p>
                     </div>
@@ -117,7 +117,7 @@ export function CardView({ categorySlug, title }: CardViewProps) {
                                     transition={{ delay: index * 0.03, type: 'spring', stiffness: 400, damping: 30 }}
                                     whileHover={{ y: -4 }}
                                     onClick={() => setEditingEntry(entry)}
-                                    className="group bg-white rounded-2xl border border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-md p-5 cursor-pointer transition-all"
+                                    className="group bg-card rounded-2xl border border-border hover:border-primary/20 shadow-sm hover:shadow-md p-5 cursor-pointer transition-all"
                                 >
                                     {/* Header */}
                                     <div className="flex items-start justify-between gap-3 mb-3">
@@ -132,14 +132,14 @@ export function CardView({ categorySlug, title }: CardViewProps) {
                                         </div>
                                         <button
                                             onClick={(e) => deleteEntry(entry.id, e)}
-                                            className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                            className="opacity-0 group-hover:opacity-100 p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </button>
                                     </div>
 
                                     {/* Content */}
-                                    <p className="text-slate-800 font-medium line-clamp-3 mb-4">
+                                    <p className="text-foreground font-medium line-clamp-3 mb-4">
                                         {entry.content}
                                     </p>
 
@@ -147,26 +147,26 @@ export function CardView({ categorySlug, title }: CardViewProps) {
                                     {tags.length > 0 && (
                                         <div className="flex flex-wrap gap-1 mb-3">
                                             {tags.slice(0, 3).map(tag => (
-                                                <span key={tag} className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full flex items-center gap-1">
+                                                <span key={tag} className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground rounded-full flex items-center gap-1">
                                                     <Tag className="h-2.5 w-2.5" />
                                                     {tag}
                                                 </span>
                                             ))}
                                             {tags.length > 3 && (
-                                                <span className="text-[10px] text-slate-400">+{tags.length - 3}</span>
+                                                <span className="text-[10px] text-muted-foreground">+{tags.length - 3}</span>
                                             )}
                                         </div>
                                     )}
 
                                     {/* Footer */}
-                                    <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                                        <span className="text-xs text-slate-400 flex items-center gap-1">
+                                    <div className="flex items-center justify-between pt-3 border-t border-border">
+                                        <span className="text-xs text-muted-foreground flex items-center gap-1">
                                             <Clock className="h-3 w-3" />
                                             {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true, locale: ptBR })}
                                         </span>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setEditingEntry(entry); }}
-                                            className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-all"
+                                            className="opacity-0 group-hover:opacity-100 p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
                                         >
                                             <Pencil className="h-3.5 w-3.5" />
                                         </button>
@@ -182,12 +182,12 @@ export function CardView({ categorySlug, title }: CardViewProps) {
                     <motion.div 
                         initial={{ opacity: 0 }} 
                         animate={{ opacity: 1 }}
-                        className="flex flex-col items-center justify-center py-16 text-slate-400"
+                        className="flex flex-col items-center justify-center py-16 text-muted-foreground"
                     >
-                        <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                            <LayoutGrid className="h-6 w-6 text-slate-300" />
+                        <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mb-4">
+                            <LayoutGrid className="h-6 w-6 text-muted-foreground" />
                         </div>
-                        <p className="font-medium text-slate-500">Nenhum item encontrado</p>
+                        <p className="font-medium text-muted-foreground">Nenhum item encontrado</p>
                     </motion.div>
                 )}
             </div>

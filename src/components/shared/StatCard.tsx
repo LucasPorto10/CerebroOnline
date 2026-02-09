@@ -46,10 +46,10 @@ export function StatCard({
             icon: 'text-indigo-500'
         },
         slate: {
-            text: 'text-slate-600',
-            bg: 'bg-slate-50/50',
-            border: 'border-slate-100/50',
-            icon: 'text-slate-400'
+            text: 'text-muted-foreground',
+            bg: 'bg-muted/50',
+            border: 'border-border/50',
+            icon: 'text-muted-foreground'
         }
     }
 
@@ -78,7 +78,7 @@ export function StatCard({
                     <span className={cn("text-3xl font-bold tracking-tight text-foreground")}>
                         {isLoading ? '...' : count}
                     </span>
-                    <span className="text-xs font-semibold text-slate-400 mt-0.5 uppercase tracking-widest">
+                    <span className="text-xs font-semibold text-muted-foreground mt-0.5 uppercase tracking-widest">
                         {label}
                     </span>
                 </div>

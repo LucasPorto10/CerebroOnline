@@ -107,7 +107,7 @@ export default function Home() {
                 <section className="space-y-4">
                     <div className="flex items-center gap-2 px-1">
                         <Sparkles className="h-4 w-4 text-indigo-500" />
-                        <h2 className="text-lg font-semibold text-slate-900">Visão Geral</h2>
+                        <h2 className="text-lg font-semibold text-foreground">Visão Geral</h2>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {stats.map((stat, index) => (
@@ -145,7 +145,7 @@ export default function Home() {
                     >
                         <div className="flex items-center gap-2">
                             <Download className="h-4 w-4 text-indigo-500" />
-                            <h2 className="text-lg font-semibold text-slate-900">Exportar</h2>
+                            <h2 className="text-lg font-semibold text-foreground">Exportar</h2>
                         </div>
                         
                 <div className="bg-card glass p-5 rounded-2xl border border-border shadow-sm space-y-4">

@@ -126,18 +126,18 @@ export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogPro
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                    className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden"
+                    className="bg-card rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header - Neutral */}
-                    <div className="bg-slate-50 border-b border-slate-200 p-5">
+                    <div className="bg-muted border-b border-border p-5">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 {/* Emoji Picker */}
                                 <div className="relative">
                                     <button
                                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                        className="text-3xl bg-white hover:bg-slate-100 rounded-xl p-2 border border-slate-200 transition-all shadow-sm"
+                                        className="text-3xl bg-card hover:bg-muted rounded-xl p-2 border border-border transition-all shadow-sm"
                                     >
                                         {emoji}
                                     </button>
@@ -145,15 +145,15 @@ export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogPro
                                         <motion.div
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-200 p-3 z-10 min-w-[240px]"
+                                            className="absolute top-full left-0 mt-2 bg-card rounded-xl shadow-xl border border-border p-3 z-10 min-w-[240px]"
                                         >
-                                            <p className="text-xs text-slate-500 mb-2">Escolha um emoji</p>
+                                            <p className="text-xs text-muted-foreground mb-2">Escolha um emoji</p>
                                             <div className="grid grid-cols-8 gap-1">
                                                 {quickEmojis.map((e) => (
                                                     <button
                                                         key={e}
                                                         onClick={() => { setEmoji(e); setShowEmojiPicker(false) }}
-                                                        className="text-lg p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                                                        className="text-lg p-1.5 hover:bg-muted rounded-lg transition-colors"
                                                     >
                                                         {e}
                                                     </button>
@@ -163,8 +163,8 @@ export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogPro
                                     )}
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-semibold text-slate-900">Editar Item</h2>
-                                    <p className="text-slate-500 text-xs flex items-center gap-1">
+                                    <h2 className="text-lg font-semibold text-foreground">Editar Item</h2>
+                                    <p className="text-muted-foreground text-xs flex items-center gap-1">
                                         <Calendar className="h-3 w-3" />
                                         {format(new Date(entry.created_at), "d 'de' MMMM, HH:mm", { locale: ptBR })}
                                     </p>
@@ -172,7 +172,7 @@ export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogPro
                             </div>
                             <button
                                 onClick={onClose}
-                                className="p-2 hover:bg-slate-200 transition-colors rounded-lg text-slate-500"
+                                className="p-2 hover:bg-muted transition-colors rounded-lg text-muted-foreground"
                             >
                                 <X className="h-5 w-5" />
                             </button>
@@ -183,7 +183,7 @@ export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogPro
                     <div className="p-5 space-y-5 overflow-y-auto max-h-[calc(90vh-160px)]">
                         {/* Status Pills */}
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide">Status</label>
+                            <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Status</label>
                             <div className="flex gap-2">
                                 {statusOptions.map((opt) => {
                                     const Icon = opt.icon
@@ -194,7 +194,7 @@ export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogPro
                                             className={`flex items-center gap-2 px-3 py-2 rounded-lg border font-medium text-sm transition-all ${
                                                 status === opt.value
                                                     ? `${opt.color} border-current`
-                                                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                                                    : 'bg-card text-muted-foreground border-border hover:border-primary/30'
                                             }`}
                                         >
                                             <Icon className="h-4 w-4" />
@@ -207,7 +207,7 @@ export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogPro
 
                         {/* Priority Selector */}
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide">Prioridade</label>
+                            <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Prioridade</label>
                             <div className="flex gap-2">
                                 {[
                                     { value: 'low', label: 'Baixa', color: 'bg-slate-100 text-slate-600 border-slate-200' },
@@ -221,7 +221,7 @@ export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogPro
                                         className={`flex items-center gap-2 px-3 py-2 rounded-lg border font-medium text-xs transition-all ${
                                             priority === opt.value
                                                 ? `${opt.color} border-current ring-1 ring-current`
-                                                : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                                                : 'bg-card text-muted-foreground border-border hover:border-primary/30'
                                         }`}
                                     >
                                         <div className={`w-2 h-2 rounded-full ${opt.color.replace('bg-', 'bg-').replace('text-', 'bg-').split(' ')[1].replace('text-', 'bg-')}`} />
@@ -233,20 +233,20 @@ export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogPro
 
                         {/* Content Textarea */}
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide">
+                            <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
                                 Conteúdo
                             </label>
                             <textarea
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
-                                className="w-full min-h-[100px] p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all resize-none text-slate-800"
+                                className="w-full min-h-[100px] p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all resize-none bg-card text-foreground"
                                 placeholder="Digite o conteúdo..."
                             />
                         </div>
 
                         {/* Type Selection */}
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide">Tipo</label>
+                            <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Tipo</label>
                             <div className="grid grid-cols-4 gap-2">
                                 {typeOptions.map((opt) => (
                                     <button
@@ -254,8 +254,8 @@ export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogPro
                                         onClick={() => setEntryType(opt.value as any)}
                                         className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border transition-all ${
                                             entryType === opt.value
-                                                ? 'bg-slate-100 border-slate-300 text-slate-900'
-                                                : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                                                ? 'bg-muted border-primary/30 text-foreground'
+                                                : 'bg-card border-border text-muted-foreground hover:border-primary/30'
                                         }`}
                                     >
                                         <span className="text-lg">{opt.emoji}</span>
@@ -268,14 +268,14 @@ export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogPro
                         {/* Subject Selection */}
                         {subjects && subjects.length > 0 && (
                             <div>
-                                <label className="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide flex items-center gap-1">
+                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide flex items-center gap-1">
                                     <BookOpen className="h-3 w-3" />
                                     Matéria
                                 </label>
                                 <select
                                     value={subjectId || ''}
                                     onChange={(e) => setSubjectId(e.target.value || null)}
-                                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all bg-white text-sm"
+                                    className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-card text-foreground text-sm"
                                 >
                                     <option value="">Nenhuma matéria</option>
                                     {subjects.map((subject) => (
@@ -289,7 +289,7 @@ export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogPro
 
                         {/* Tags */}
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide flex items-center gap-1">
+                            <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide flex items-center gap-1">
                                 <Tag className="h-3 w-3" />
                                 Tags
                             </label>
@@ -306,27 +306,27 @@ export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogPro
 
                         {/* Date Range */}
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide flex items-center gap-1">
+                            <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
                                 Período
                             </label>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="text-xs text-slate-400 mb-1 block">Início</label>
+                                    <label className="text-xs text-muted-foreground mb-1 block">Início</label>
                                     <input
                                         type="date"
                                         value={startDate}
                                         onChange={(e) => setStartDate(e.target.value)}
-                                        className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-400 text-sm"
+                                        className="w-full p-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary text-sm bg-card text-foreground"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-400 mb-1 block">Prazo</label>
+                                    <label className="text-xs text-muted-foreground mb-1 block">Prazo</label>
                                     <input
                                         type="date"
                                         value={dueDate}
                                         onChange={(e) => setDueDate(e.target.value)}
-                                        className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-400 text-sm"
+                                        className="w-full p-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary text-sm bg-card text-foreground"
                                     />
                                 </div>
                             </div>
@@ -334,12 +334,12 @@ export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogPro
                     </div>
 
                     {/* Actions Footer */}
-                    <div className="border-t border-slate-200 p-4 bg-slate-50 flex items-center justify-between">
+                    <div className="border-t border-border p-4 bg-muted flex items-center justify-between">
                         <Button
                             variant="ghost"
                             onClick={() => deleteMutation.mutate()}
                             disabled={deleteMutation.isPending}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
                         >
                             <Trash2 className="h-4 w-4 mr-2" />
                             {deleteMutation.isPending ? 'Excluindo...' : 'Excluir'}
@@ -352,7 +352,7 @@ export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogPro
                             <Button
                                 onClick={() => updateMutation.mutate()}
                                 disabled={updateMutation.isPending || !content.trim()}
-                                className="bg-slate-900 hover:bg-slate-800"
+                                className="bg-primary hover:bg-primary/90"
                             >
                                 {updateMutation.isPending ? (
                                     <>

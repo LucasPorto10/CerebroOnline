@@ -163,7 +163,7 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       {/* User Profile Section */}
-      <div className="px-3 pt-4 border-t border-slate-100 mt-auto">
+      <div className="px-3 pt-4 border-t border-border mt-auto">
         <UserProfile />
       </div>
 
@@ -172,7 +172,7 @@ export const Sidebar: React.FC = () => {
         <Button 
           variant="ghost" 
           className={cn(
-            "w-full justify-start gap-3 px-3 py-5 rounded-2xl text-slate-400 hover:text-red-600 hover:bg-red-50/50",
+            "w-full justify-start gap-3 px-3 py-5 rounded-2xl text-muted-foreground hover:text-red-500 hover:bg-red-500/10",
             collapsed && !mobileOpen ? "justify-center px-0" : ""
           )}
           onClick={signOut}
@@ -227,9 +227,9 @@ export const Sidebar: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="md:hidden fixed left-0 top-0 bottom-0 w-72 bg-white z-50 flex flex-col shadow-2xl"
+              className="md:hidden fixed left-0 top-0 bottom-0 w-72 bg-card z-50 flex flex-col shadow-2xl"
             >
-              <div className="p-6 flex items-center justify-between border-b border-slate-50">
+              <div className="p-6 flex items-center justify-between border-b border-border">
                 <Logo isMobile />
                 <Button variant="ghost" size="icon" onClick={() => setMobileOpen(false)} className="rounded-xl">
                   <X className="h-5 w-5" />

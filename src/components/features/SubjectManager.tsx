@@ -112,14 +112,14 @@ export function SubjectManager({ onSelectSubject, selectedSubjectId, showAddButt
     }
 
     if (isLoading) {
-        return <div className="animate-pulse h-20 bg-slate-100 rounded-xl" />
+        return <div className="animate-pulse h-20 bg-muted rounded-xl" />
     }
 
     return (
         <div className="space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-indigo-500" />
                     Matérias
                 </h3>
@@ -141,20 +141,20 @@ export function SubjectManager({ onSelectSubject, selectedSubjectId, showAddButt
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="bg-slate-50 rounded-xl p-4 space-y-3 border border-slate-200"
+                        className="bg-muted rounded-xl p-4 space-y-3 border border-border"
                     >
                         <input
                             type="text"
                             value={newName}
                             onChange={(e) => setNewName(e.target.value)}
                             placeholder="Nome da matéria..."
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                            className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
                             autoFocus
                         />
                         
                         {/* Color Picker */}
                         <div className="flex items-start gap-2">
-                            <Palette className="h-4 w-4 text-slate-400 mt-1 shrink-0" />
+                            <Palette className="h-4 w-4 text-muted-foreground mt-1 shrink-0" />
                             <div className="flex flex-wrap gap-2">
                                 {PRESET_COLORS.map(color => (
                                     <button
@@ -162,7 +162,7 @@ export function SubjectManager({ onSelectSubject, selectedSubjectId, showAddButt
                                         onClick={() => setNewColor(color)}
                                         className={cn(
                                             "w-6 h-6 rounded-full transition-transform shrink-0",
-                                            newColor === color && "ring-2 ring-offset-2 ring-slate-400 scale-110"
+                                            newColor === color && "ring-2 ring-offset-2 ring-primary scale-110"
                                         )}
                                         style={{ backgroundColor: color }}
                                     />
@@ -178,7 +178,7 @@ export function SubjectManager({ onSelectSubject, selectedSubjectId, showAddButt
                                     onClick={() => setNewIcon(icon)}
                                     className={cn(
                                         "text-xl p-1 rounded transition-all",
-                                        newIcon === icon && "bg-slate-200 scale-110"
+                                        newIcon === icon && "bg-muted scale-110"
                                     )}
                                 >
                                     {icon}
@@ -189,7 +189,7 @@ export function SubjectManager({ onSelectSubject, selectedSubjectId, showAddButt
                         <div className="flex justify-end gap-2">
                             <button
                                 onClick={resetForm}
-                                className="px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200 rounded-lg"
+                                className="px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted rounded-lg"
                             >
                                 Cancelar
                             </button>
@@ -213,8 +213,8 @@ export function SubjectManager({ onSelectSubject, selectedSubjectId, showAddButt
                     className={cn(
                         "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all",
                         !selectedSubjectId 
-                            ? "bg-slate-100 text-slate-900" 
-                            : "hover:bg-slate-50 text-slate-600"
+                            ? "bg-muted text-foreground" 
+                            : "hover:bg-muted/50 text-muted-foreground"
                     )}
                 >
                     <span className="text-lg">📋</span>
@@ -239,7 +239,7 @@ export function SubjectManager({ onSelectSubject, selectedSubjectId, showAddButt
             </div>
 
             {(!subjects || subjects.length === 0) && !isAdding && (
-                <p className="text-sm text-slate-400 text-center py-4">
+                <p className="text-sm text-muted-foreground text-center py-4">
                     Nenhuma matéria cadastrada
                 </p>
             )}
@@ -276,13 +276,13 @@ function SubjectItem({
         return (
             <motion.div
                 layout
-                className="bg-slate-50 rounded-xl p-3 space-y-2 border border-slate-200"
+                className="bg-muted rounded-xl p-3 space-y-2 border border-border"
             >
                 <input
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-2 py-1.5 text-sm rounded border border-slate-200"
+                    className="w-full px-2 py-1.5 text-sm rounded border border-border bg-card text-foreground"
                     autoFocus
                 />
                 <div className="flex flex-wrap gap-1.5">
@@ -290,7 +290,7 @@ function SubjectItem({
                         <button
                             key={color}
                             onClick={() => setEditColor(color)}
-                            className={cn("w-5 h-5 rounded-full shrink-0", editColor === color && "ring-2 ring-offset-1 ring-slate-400")}
+                            className={cn("w-5 h-5 rounded-full shrink-0", editColor === color && "ring-2 ring-offset-1 ring-primary")}
                             style={{ backgroundColor: color }}
                         />
                     ))}
@@ -300,14 +300,14 @@ function SubjectItem({
                         <button
                             key={icon}
                             onClick={() => setEditIcon(icon)}
-                            className={cn("text-sm p-0.5 rounded", editIcon === icon && "bg-slate-200")}
+                            className={cn("text-sm p-0.5 rounded", editIcon === icon && "bg-muted")}
                         >
                             {icon}
                         </button>
                     ))}
                 </div>
                 <div className="flex justify-end gap-1">
-                    <button onClick={onCancelEdit} className="p-1.5 text-slate-400 hover:text-slate-600">
+                    <button onClick={onCancelEdit} className="p-1.5 text-muted-foreground hover:text-foreground">
                         <X className="h-4 w-4" />
                     </button>
                     <button 
@@ -330,8 +330,8 @@ function SubjectItem({
             className={cn(
                 "group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all cursor-pointer",
                 isSelected 
-                    ? "bg-slate-100 text-slate-900" 
-                    : "hover:bg-slate-50 text-slate-600"
+                    ? "bg-muted text-foreground" 
+                    : "hover:bg-muted/50 text-muted-foreground"
             )}
             onClick={onSelect}
         >
@@ -345,13 +345,13 @@ function SubjectItem({
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button 
                     onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                    className="p-1 text-slate-400 hover:text-indigo-500"
+                    className="p-1 text-muted-foreground hover:text-indigo-500"
                 >
                     <Pencil className="h-3.5 w-3.5" />
                 </button>
                 <button 
                     onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                    className="p-1 text-slate-400 hover:text-red-500"
+                    className="p-1 text-muted-foreground hover:text-red-500"
                 >
                     <Trash2 className="h-3.5 w-3.5" />
                 </button>

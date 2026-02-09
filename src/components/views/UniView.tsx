@@ -97,8 +97,8 @@ export function UniView() {
                             <GraduationCap className="h-6 w-6" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold tracking-tight text-slate-900">Faculdade</h2>
-                            <p className="text-sm text-slate-500">
+                            <h2 className="text-2xl font-bold tracking-tight text-foreground">Faculdade</h2>
+                            <p className="text-sm text-muted-foreground">
                                 {entries?.length || 0} itens
                                 {selectedSubjectId && ' nesta matéria'}
                             </p>
@@ -109,8 +109,8 @@ export function UniView() {
                         className={cn(
                             "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
                             showFilters 
-                                ? "bg-indigo-100 text-indigo-700" 
-                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                ? "bg-primary/20 text-primary" 
+                                : "bg-muted text-muted-foreground hover:bg-muted/80"
                         )}
                     >
                         <Filter className="h-4 w-4" />
@@ -128,7 +128,7 @@ export function UniView() {
                                 exit={{ opacity: 0, height: 0 }}
                                 className="w-full lg:w-[280px] lg:shrink-0 overflow-hidden"
                             >
-                                <div className="bg-white rounded-2xl border border-slate-200 p-4">
+                                <div className="bg-card rounded-2xl border border-border p-4">
                                     <SubjectManager
                                         selectedSubjectId={selectedSubjectId}
                                         onSelectSubject={handleSelectSubject}
@@ -156,7 +156,7 @@ export function UniView() {
                                             exit={{ opacity: 0, scale: 0.9 }}
                                             transition={{ delay: index * 0.03 }}
                                             onClick={() => setEditingEntry(entry)}
-                                            className="group bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                                            className="group bg-card rounded-xl border border-border p-4 shadow-sm hover:shadow-md transition-all cursor-pointer"
                                         >
                                             {/* Header */}
                                             <div className="flex items-start justify-between mb-3">
@@ -180,7 +180,7 @@ export function UniView() {
                                             </div>
 
                                             {/* Content */}
-                                            <p className="text-slate-800 font-medium text-sm line-clamp-2 mb-3">
+                                            <p className="text-foreground font-medium text-sm line-clamp-2 mb-3">
                                                 {entry.content}
                                             </p>
 
@@ -190,7 +190,7 @@ export function UniView() {
                                                     {entry.tags.slice(0, 4).map((tag) => (
                                                         <span 
                                                             key={tag} 
-                                                            className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded"
+                                                            className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 bg-muted text-muted-foreground rounded"
                                                         >
                                                             <Tag className="h-2.5 w-2.5" />
                                                             {tag}
@@ -201,7 +201,7 @@ export function UniView() {
 
                                             {/* Footer */}
                                             <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                                                <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                                                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                                                     <Clock className="h-3 w-3" />
                                                     {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true, locale: ptBR })}
                                                 </span>
@@ -228,15 +228,15 @@ export function UniView() {
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50"
+                                className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-border rounded-2xl bg-muted/30"
                             >
                                 <div className="w-16 h-16 bg-violet-100 rounded-full flex items-center justify-center mb-4">
                                     <BookOpen className="h-7 w-7 text-violet-400" />
                                 </div>
-                                <p className="font-medium text-slate-500">
+                                <p className="font-medium text-muted-foreground">
                                     {selectedSubjectId ? 'Nenhum item nesta matéria' : 'Nenhum item de faculdade'}
                                 </p>
-                                <p className="text-sm text-slate-400 mt-1">
+                                <p className="text-sm text-muted-foreground/80 mt-1">
                                     Use o Magic Input na Home para adicionar
                                 </p>
                             </motion.div>

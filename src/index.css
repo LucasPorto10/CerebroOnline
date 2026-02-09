@@ -38,29 +38,29 @@
   :root[data-theme='slate'] { --primary: 215 25% 27%; --ring: 215 25% 27%; }
 
   .dark {
-    --background: 222 47% 4%;
+    --background: 222 47% 11%;
     --foreground: 210 40% 98%;
-    --card: 222 47% 6%;
+    --card: 217 33% 17%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 6%;
+    --popover: 217 33% 17%;
     --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
+    --primary: 217 91% 60%;
     --primary-foreground: 222 47% 11%;
-    --secondary: 222 47% 12%;
+    --secondary: 215 28% 17%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 222 47% 15%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 222 47% 12%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 215 20% 75%;
+    --accent: 215 28% 17%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
-    --border: 222 47% 12%;
-    --input: 222 47% 12%;
-    --ring: 213 27% 84%;
+    --border: 217 33% 20%;
+    --input: 217 33% 17%;
+    --ring: 224 76% 48%;
   }
 
   /* Themes - Dark Overrides for Primary Visibility */
-  .dark[data-theme='indigo'] { --primary: 243 75% 70%; --ring: 243 75% 70%; }
+  .dark[data-theme='indigo'] { --primary: 217 91% 60%; --ring: 217 91% 60%; }
   .dark[data-theme='violet'] { --primary: 258 90% 75%; --ring: 258 90% 75%; }
   .dark[data-theme='rose'] { --primary: 346 84% 70%; --ring: 346 84% 70%; }
   .dark[data-theme='emerald'] { --primary: 158 64% 65%; --ring: 158 64% 65%; }
