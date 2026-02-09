@@ -37,7 +37,7 @@ export function exportToPDF(entries: ExportEntry[], stats: any) {
 
     // Table
     const tableColumn = ["Data", "Conteúdo", "Categoria", "Status", "Tipo"]
-    const tableRows = []
+    const tableRows: any[] = []
 
     entries.forEach(entry => {
         const entryDate = new Date(entry.created_at).toLocaleDateString('pt-BR')
@@ -59,13 +59,13 @@ export function exportToPDF(entries: ExportEntry[], stats: any) {
 
     autoTable(doc, {
         head: [tableColumn],
-        body: tableRows as any,
+        body: tableRows,
         startY: 60,
         theme: 'grid',
         styles: { fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: [79, 70, 229], textColor: 255 }, // Indigo-600
         alternateRowStyles: { fillColor: [245, 247, 255] }
-    })
+    } as any)
 
     doc.save(`mindsync-relatorio-${today.replace(/\//g, '-')}.pdf`)
 }
