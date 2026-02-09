@@ -3,12 +3,14 @@ import { supabase } from '@/api/supabase'
 import { Database } from '@/types/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { Pencil, Trash2, Clock, GripVertical, LayoutGrid } from 'lucide-react'
+import { LayoutGrid, Clock, GripVertical, Sparkles, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { EditEntryDialog } from '@/components/features/EditEntryDialog'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { DateFilter, DateRange } from '@/components/features/DateFilter'
+import { useAutoEmoji } from '@/hooks/useAutoEmoji'
 
 type Entry = Database['public']['Tables']['entries']['Row']
 
@@ -47,6 +49,7 @@ const columns: Column[] = [
 export function KanbanView() {
     const [editingEntry, setEditingEntry] = useState<Entry | null>(null)
     const [draggedEntry, setDraggedEntry] = useState<Entry | null>(null)
+    const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null })
     const queryClient = useQueryClient()
 
     const { data: entries, isLoading } = useQuery<Entry[]>({
@@ -110,9 +113,24 @@ export function KanbanView() {
         setDraggedEntry(null)
     }
 
+    // Apply date filter
+    const filteredEntries = entries?.filter(entry => {
+        if (!dateRange.start) return true
+        const entryDate = parseISO(entry.created_at)
+        const start = startOfDay(dateRange.start)
+        const end = dateRange.end ? endOfDay(dateRange.end) : endOfDay(dateRange.start)
+        return isWithinInterval(entryDate, { start, end })
+    })
+
     const getColumnEntries = (columnId: string) => {
-        return entries?.filter(entry => entry.status === columnId) || []
+        return filteredEntries?.filter(entry => entry.status === columnId) || []
     }
+
+    // Auto assign emojis
+    useAutoEmoji(entries as any)
+
+    // Get dates for calendar
+    const datesWithEntries = useMemo(() => entries?.map(e => e.created_at) || [], [entries])
 
     if (isLoading) {
         return (
@@ -138,9 +156,7 @@ export function KanbanView() {
                             </p>
                         </div>
                     </div>
-                    <div className="text-sm text-slate-400">
-                        {entries?.length || 0} tarefas
-                    </div>
+                    <DateFilter value={dateRange} onChange={setDateRange} datesWithEntries={datesWithEntries} />
                 </div>
 
                 {/* Kanban Board */}
@@ -161,7 +177,7 @@ export function KanbanView() {
                 </div>
 
                 {/* Empty State */}
-                {(!entries || entries.length === 0) && (
+                {(!filteredEntries || filteredEntries.length === 0) && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -305,9 +321,18 @@ function KanbanCard({ entry, index, onDragStart, onDragEnd, onEdit, onDelete }: 
                     <GripVertical className="h-4 w-4 text-slate-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-800 line-clamp-3">
-                        {entry.content}
-                    </p>
+                    {/* Emoji + Content */}
+                    <div className="flex items-start gap-2">
+                        <div className={cn(
+                            "flex-shrink-0 flex items-center justify-center transition-all",
+                            !(entry.metadata as any)?.emoji && "animate-pulse"
+                        )}>
+                            {(entry.metadata as any)?.emoji || <Sparkles className="h-3 w-3 text-slate-300" />}
+                        </div>
+                        <p className="text-sm font-medium text-slate-800 line-clamp-3 flex-1">
+                            {entry.content}
+                        </p>
+                    </div>
                     
                     {/* Tags */}
                     {(entry.metadata as any)?.tags && (

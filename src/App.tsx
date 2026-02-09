@@ -9,6 +9,7 @@ import { CardView } from '@/components/views/CardView'
 import { BoardView } from '@/components/views/BoardView'
 import { KanbanView } from '@/components/views/KanbanView'
 import { UniView } from '@/components/views/UniView'
+import { CalendarView } from '@/components/views/CalendarView'
 import { useAuth } from '@/providers/auth-provider'
 import Settings from '@/pages/Settings'
 
@@ -40,6 +41,7 @@ function App() {
                     <Route path="uni" element={<UniView />} />
                     <Route path="ideas" element={<BoardView />} />
                     <Route path="kanban" element={<KanbanView />} />
+                    <Route path="calendar" element={<CalendarView />} />
                     <Route path="settings" element={<Settings />} />
                 </Route>
             </Routes>

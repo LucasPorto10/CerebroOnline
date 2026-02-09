@@ -4,21 +4,41 @@ import { supabase } from '@/api/supabase'
 import { Subject, Entry } from '@/types/supabase'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Save, Loader2, BookOpen } from 'lucide-react'
+import { X, Save, Loader2, BookOpen, Calendar, Tag, CheckCircle2, Clock, PlayCircle, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TagInput, TagSuggestions } from '@/components/features/TagInput'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 
 interface EditEntryDialogProps {
     entry: Entry
     onClose: () => void
+    onUpdate?: () => void
 }
 
-export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
+const statusOptions = [
+    { value: 'pending', label: 'Pendente', icon: Clock, color: 'bg-amber-50 text-amber-700 border-amber-200' },
+    { value: 'in_progress', label: 'Em Progresso', icon: PlayCircle, color: 'bg-blue-50 text-blue-700 border-blue-200' },
+    { value: 'done', label: 'Concluído', icon: CheckCircle2, color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+]
+
+const typeOptions = [
+    { value: 'task', label: 'Tarefa', emoji: '📋' },
+    { value: 'note', label: 'Nota', emoji: '📝' },
+    { value: 'insight', label: 'Insight', emoji: '💡' },
+    { value: 'bookmark', label: 'Bookmark', emoji: '🔖' },
+]
+
+const quickEmojis = ['📋', '📝', '💡', '🎯', '⭐', '🔥', '💪', '📚', '💼', '🏠', '🛒', '📧', '📅', '🎉', '🚀', '✨', '🏃', '🍎', '💊', '🧹', '🔧', '📞', '✈️', '🎬']
+
+export function EditEntryDialog({ entry, onClose, onUpdate }: EditEntryDialogProps) {
     const [content, setContent] = useState(entry.content)
     const [entryType, setEntryType] = useState(entry.entry_type || 'note')
     const [status, setStatus] = useState(entry.status || 'pending')
     const [subjectId, setSubjectId] = useState<string | null>(entry.subject_id)
     const [tags, setTags] = useState<string[]>(entry.tags || [])
+    const [emoji, setEmoji] = useState<string>((entry.metadata as any)?.emoji || '📌')
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false)
     const queryClient = useQueryClient()
 
     // Fetch subjects for dropdown
@@ -36,6 +56,7 @@ export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
 
     const updateMutation = useMutation({
         mutationFn: async () => {
+            const currentMetadata = (entry.metadata as any) || {}
             const { data, error } = await supabase
                 .from('entries')
                 // @ts-ignore
@@ -45,6 +66,7 @@ export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
                     status,
                     subject_id: subjectId,
                     tags,
+                    metadata: { ...currentMetadata, emoji },
                 })
                 .eq('id', entry.id)
                 .select()
@@ -56,7 +78,9 @@ export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['entries'] })
             queryClient.invalidateQueries({ queryKey: ['stats'] })
-            toast.success('Item atualizado com sucesso!')
+            queryClient.invalidateQueries({ queryKey: ['stats'] })
+            toast.success('Item atualizado!')
+            onUpdate?.()
             onClose()
         },
         onError: (error: any) => {
@@ -72,7 +96,9 @@ export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['entries'] })
             queryClient.invalidateQueries({ queryKey: ['stats'] })
+            queryClient.invalidateQueries({ queryKey: ['stats'] })
             toast.success('Item excluído')
+            onUpdate?.()
             onClose()
         },
         onError: (error: any) => {
@@ -86,7 +112,7 @@ export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
                 onClick={onClose}
             >
                 <motion.div
@@ -94,78 +120,130 @@ export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                    className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto"
+                    className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    {/* Header */}
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold text-slate-900">Editar Item</h2>
-                        <button
-                            onClick={onClose}
-                            className="p-2 text-slate-400 hover:text-slate-600 transition-colors rounded-lg hover:bg-slate-100"
-                        >
-                            <X className="h-5 w-5" />
-                        </button>
+                    {/* Header - Neutral */}
+                    <div className="bg-slate-50 border-b border-slate-200 p-5">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                {/* Emoji Picker */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                        className="text-3xl bg-white hover:bg-slate-100 rounded-xl p-2 border border-slate-200 transition-all shadow-sm"
+                                    >
+                                        {emoji}
+                                    </button>
+                                    {showEmojiPicker && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-200 p-3 z-10 min-w-[240px]"
+                                        >
+                                            <p className="text-xs text-slate-500 mb-2">Escolha um emoji</p>
+                                            <div className="grid grid-cols-8 gap-1">
+                                                {quickEmojis.map((e) => (
+                                                    <button
+                                                        key={e}
+                                                        onClick={() => { setEmoji(e); setShowEmojiPicker(false) }}
+                                                        className="text-lg p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                                                    >
+                                                        {e}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-semibold text-slate-900">Editar Item</h2>
+                                    <p className="text-slate-500 text-xs flex items-center gap-1">
+                                        <Calendar className="h-3 w-3" />
+                                        {format(new Date(entry.created_at), "d 'de' MMMM, HH:mm", { locale: ptBR })}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={onClose}
+                                className="p-2 hover:bg-slate-200 transition-colors rounded-lg text-slate-500"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
                     </div>
 
                     {/* Content */}
-                    <div className="space-y-4">
+                    <div className="p-5 space-y-5 overflow-y-auto max-h-[calc(90vh-160px)]">
+                        {/* Status Pills */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                            <label className="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide">Status</label>
+                            <div className="flex gap-2">
+                                {statusOptions.map((opt) => {
+                                    const Icon = opt.icon
+                                    return (
+                                        <button
+                                            key={opt.value}
+                                            onClick={() => setStatus(opt.value as any)}
+                                            className={`flex items-center gap-2 px-3 py-2 rounded-lg border font-medium text-sm transition-all ${
+                                                status === opt.value
+                                                    ? `${opt.color} border-current`
+                                                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <Icon className="h-4 w-4" />
+                                            {opt.label}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Content Textarea */}
+                        <div>
+                            <label className="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide">
                                 Conteúdo
                             </label>
                             <textarea
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
-                                className="w-full min-h-[100px] p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+                                className="w-full min-h-[100px] p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all resize-none text-slate-800"
                                 placeholder="Digite o conteúdo..."
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Tipo
-                                </label>
-                                <select
-                                    value={entryType}
-                                    onChange={(e) => setEntryType(e.target.value as any)}
-                                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white"
-                                >
-                                    <option value="task">Tarefa</option>
-                                    <option value="note">Nota</option>
-                                    <option value="insight">Insight</option>
-                                    <option value="bookmark">Bookmark</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Status
-                                </label>
-                                <select
-                                    value={status}
-                                    onChange={(e) => setStatus(e.target.value as any)}
-                                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white"
-                                >
-                                    <option value="pending">Pendente</option>
-                                    <option value="in_progress">Em Progresso</option>
-                                    <option value="done">Concluído</option>
-                                </select>
+                        {/* Type Selection */}
+                        <div>
+                            <label className="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide">Tipo</label>
+                            <div className="grid grid-cols-4 gap-2">
+                                {typeOptions.map((opt) => (
+                                    <button
+                                        key={opt.value}
+                                        onClick={() => setEntryType(opt.value as any)}
+                                        className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border transition-all ${
+                                            entryType === opt.value
+                                                ? 'bg-slate-100 border-slate-300 text-slate-900'
+                                                : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                                        }`}
+                                    >
+                                        <span className="text-lg">{opt.emoji}</span>
+                                        <span className="text-xs font-medium">{opt.label}</span>
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
                         {/* Subject Selection */}
                         {subjects && subjects.length > 0 && (
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
-                                    <BookOpen className="h-4 w-4" />
+                                <label className="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide flex items-center gap-1">
+                                    <BookOpen className="h-3 w-3" />
                                     Matéria
                                 </label>
                                 <select
                                     value={subjectId || ''}
                                     onChange={(e) => setSubjectId(e.target.value || null)}
-                                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white"
+                                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all bg-white text-sm"
                                 >
                                     <option value="">Nenhuma matéria</option>
                                     {subjects.map((subject) => (
@@ -178,24 +256,32 @@ export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
                         )}
 
                         {/* Tags */}
-                        <TagInput
-                            tags={tags}
-                            onChange={setTags}
-                            placeholder="Adicionar tag..."
-                        />
-                        <TagSuggestions
-                            currentTags={tags}
-                            onAddTag={(tag) => setTags([...tags, tag])}
-                        />
+                        <div>
+                            <label className="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide flex items-center gap-1">
+                                <Tag className="h-3 w-3" />
+                                Tags
+                            </label>
+                            <TagInput
+                                tags={tags}
+                                onChange={setTags}
+                                placeholder="Adicionar tag..."
+                            />
+                            <TagSuggestions
+                                currentTags={tags}
+                                onAddTag={(tag) => setTags([...tags, tag])}
+                            />
+                        </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                    {/* Actions Footer */}
+                    <div className="border-t border-slate-200 p-4 bg-slate-50 flex items-center justify-between">
                         <Button
-                            variant="destructive"
+                            variant="ghost"
                             onClick={() => deleteMutation.mutate()}
                             disabled={deleteMutation.isPending}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
+                            <Trash2 className="h-4 w-4 mr-2" />
                             {deleteMutation.isPending ? 'Excluindo...' : 'Excluir'}
                         </Button>
 
@@ -206,6 +292,7 @@ export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
                             <Button
                                 onClick={() => updateMutation.mutate()}
                                 disabled={updateMutation.isPending || !content.trim()}
+                                className="bg-slate-900 hover:bg-slate-800"
                             >
                                 {updateMutation.isPending ? (
                                     <>

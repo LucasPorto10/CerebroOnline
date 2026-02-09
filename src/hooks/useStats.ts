@@ -4,6 +4,7 @@ import { supabase } from '@/api/supabase'
 export interface DashboardStats {
     pending: number
     inProgress: number
+    completed: number
     notes: number
     ideas: number
     totalEntries: number
@@ -14,7 +15,7 @@ export function useStats() {
         queryKey: ['stats', 'dashboard'],
         queryFn: async () => {
             // Fetch all stats in parallel
-            const [pendingResult, inProgressResult, notesResult, ideasResult, totalResult] = await Promise.all([
+            const [pendingResult, inProgressResult, completedResult, notesResult, ideasResult, totalResult] = await Promise.all([
                 // Pending tasks
                 supabase
                     .from('entries')
@@ -28,6 +29,13 @@ export function useStats() {
                     .select('id', { count: 'exact', head: true })
                     .eq('entry_type', 'task')
                     .eq('status', 'in_progress'),
+
+                // Completed tasks
+                supabase
+                    .from('entries')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('entry_type', 'task')
+                    .eq('status', 'done'),
                 
                 // Notes count
                 supabase
@@ -50,6 +58,7 @@ export function useStats() {
             return {
                 pending: pendingResult.count ?? 0,
                 inProgress: inProgressResult.count ?? 0,
+                completed: completedResult.count ?? 0,
                 notes: notesResult.count ?? 0,
                 ideas: ideasResult.count ?? 0,
                 totalEntries: totalResult.count ?? 0,

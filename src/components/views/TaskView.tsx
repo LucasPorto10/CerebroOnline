@@ -1,14 +1,16 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/api/supabase'
 import { Database } from '@/types/supabase'
-import { CheckCircle2, Circle, Clock, Pencil, Trash2, ListTodo, CircleDot } from 'lucide-react'
+import { ListTodo } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
-import { formatDistanceToNow } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns'
 import { EditEntryDialog } from '@/components/features/EditEntryDialog'
+import { DateFilter, DateRange } from '@/components/features/DateFilter'
+import { EntryCard } from '@/components/shared/EntryCard'
+import { useAutoEmoji } from '@/hooks/useAutoEmoji'
 
 type Entry = Database['public']['Tables']['entries']['Row']
 
@@ -19,6 +21,7 @@ interface TaskViewProps {
 export function TaskView({ categorySlug }: TaskViewProps) {
     const [editingEntry, setEditingEntry] = useState<Entry | null>(null)
     const [filter, setFilter] = useState<'all' | 'pending' | 'done'>('all')
+    const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null })
     const queryClient = useQueryClient()
 
     const { data: entries, refetch } = useQuery<Entry[]>({
@@ -43,9 +46,16 @@ export function TaskView({ categorySlug }: TaskViewProps) {
     })
 
     const filteredEntries = entries?.filter(entry => {
-        if (filter === 'all') return true
-        if (filter === 'pending') return entry.status !== 'done'
-        if (filter === 'done') return entry.status === 'done'
+        if (filter === 'pending' && entry.status === 'done') return false
+        if (filter === 'done' && entry.status !== 'done') return false
+        
+        if (dateRange.start) {
+            const entryDate = parseISO(entry.created_at)
+            const start = startOfDay(dateRange.start)
+            const end = dateRange.end ? endOfDay(dateRange.end) : endOfDay(dateRange.start)
+            if (!isWithinInterval(entryDate, { start, end })) return false
+        }
+        
         return true
     })
 
@@ -56,12 +66,36 @@ export function TaskView({ categorySlug }: TaskViewProps) {
         done: entries?.filter(e => e.status === 'done').length || 0,
     }
 
+    // Auto assign emojis silently
+    useAutoEmoji(entries as any)
+
+    const datesWithEntries = useMemo(() => {
+        return entries?.map(e => e.created_at) || []
+    }, [entries])
+
     const getCategoryTitle = (slug: string) => {
         switch (slug) {
             case 'home': return 'Doméstico'
             case 'work': return 'Trabalho'
             case 'uni': return 'Faculdade'
             default: return slug
+        }
+    }
+
+    const toggleStatus = async (entry: Entry) => {
+        const newStatus = entry.status === 'done' ? 'pending' : 'done'
+        
+        const { error } = await (supabase as any)
+            .from('entries')
+            .update({ status: newStatus })
+            .eq('id', entry.id)
+
+        if (error) {
+            toast.error('Erro ao atualizar')
+        } else {
+            toast.success(newStatus === 'done' ? '✓ Concluída!' : 'Reaberta')
+            refetch()
+            queryClient.invalidateQueries({ queryKey: ['stats'] })
         }
     }
 
@@ -80,25 +114,28 @@ export function TaskView({ categorySlug }: TaskViewProps) {
                     </div>
 
                     {/* Filter Tabs */}
-                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-                        {[
-                            { key: 'all', label: 'Todas', count: stats.total },
-                            { key: 'pending', label: 'Pendentes', count: stats.pending + stats.inProgress },
-                            { key: 'done', label: 'Concluídas', count: stats.done },
-                        ].map(tab => (
-                            <button
-                                key={tab.key}
-                                onClick={() => setFilter(tab.key as any)}
-                                className={cn(
-                                    "px-3 py-1.5 text-sm font-medium rounded-lg transition-all",
-                                    filter === tab.key 
-                                        ? "bg-white text-slate-900 shadow-sm" 
-                                        : "text-slate-500 hover:text-slate-700"
-                                )}
-                            >
-                                {tab.label} ({tab.count})
-                            </button>
-                        ))}
+                    <div className="flex items-center gap-3">
+                        <DateFilter value={dateRange} onChange={setDateRange} datesWithEntries={datesWithEntries} />
+                        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                            {[
+                                { key: 'all', label: 'Todas', count: stats.total },
+                                { key: 'pending', label: 'Pendentes', count: stats.pending + stats.inProgress },
+                                { key: 'done', label: 'Concluídas', count: stats.done },
+                            ].map(tab => (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => setFilter(tab.key as any)}
+                                    className={cn(
+                                        "px-3 py-1.5 text-sm font-medium rounded-lg transition-all",
+                                        filter === tab.key 
+                                            ? "bg-white text-slate-900 shadow-sm" 
+                                            : "text-slate-500 hover:text-slate-700"
+                                    )}
+                                >
+                                    {tab.label} ({tab.count})
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
@@ -118,15 +155,12 @@ export function TaskView({ categorySlug }: TaskViewProps) {
                 <div className="space-y-2">
                     <AnimatePresence mode="popLayout">
                         {filteredEntries?.map((entry, index) => (
-                            <TaskItem 
-                                key={entry.id} 
-                                entry={entry} 
+                            <EntryCard
+                                key={entry.id}
+                                entry={entry}
                                 index={index}
-                                onUpdate={() => {
-                                    refetch()
-                                    queryClient.invalidateQueries({ queryKey: ['stats'] })
-                                }}
                                 onEdit={() => setEditingEntry(entry)}
+                                onToggleStatus={() => toggleStatus(entry)}
                             />
                         ))}
                     </AnimatePresence>
@@ -153,119 +187,12 @@ export function TaskView({ categorySlug }: TaskViewProps) {
                 <EditEntryDialog
                     entry={editingEntry}
                     onClose={() => setEditingEntry(null)}
+                    onUpdate={() => {
+                        refetch()
+                        queryClient.invalidateQueries({ queryKey: ['stats'] })
+                    }}
                 />
             )}
         </>
-    )
-}
-
-interface TaskItemProps {
-    entry: Entry
-    index: number
-    onUpdate: () => void
-    onEdit: () => void
-}
-
-function TaskItem({ entry, index, onUpdate, onEdit }: TaskItemProps) {
-    const [isToggling, setIsToggling] = useState(false)
-
-    const toggleStatus = async (e: React.MouseEvent) => {
-        e.stopPropagation()
-        setIsToggling(true)
-        const newStatus = entry.status === 'done' ? 'pending' : 'done'
-
-        const { error } = await (supabase as any)
-            .from('entries')
-            .update({ status: newStatus })
-            .eq('id', entry.id)
-
-        if (error) {
-            toast.error('Erro ao atualizar tarefa')
-        } else {
-            toast.success(newStatus === 'done' ? '✓ Tarefa concluída!' : 'Tarefa reaberta')
-            onUpdate()
-        }
-        setIsToggling(false)
-    }
-
-    const deleteEntry = async (e: React.MouseEvent) => {
-        e.stopPropagation()
-        const { error } = await (supabase as any).from('entries').delete().eq('id', entry.id)
-        if (error) toast.error('Erro ao excluir')
-        else {
-            toast.success('Tarefa removida')
-            onUpdate()
-        }
-    }
-
-    const getStatusIcon = () => {
-        if (entry.status === 'done') {
-            return <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-        }
-        if (entry.status === 'in_progress') {
-            return <CircleDot className="h-5 w-5 text-blue-500" />
-        }
-        return <Circle className="h-5 w-5 text-slate-300 group-hover:text-indigo-400 transition-colors" />
-    }
-
-    return (
-        <motion.div
-            layout
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, x: -100, transition: { duration: 0.2 } }}
-            transition={{ delay: index * 0.03, type: 'spring', stiffness: 400, damping: 30 }}
-            onClick={onEdit}
-            className={cn(
-                "group flex items-center gap-4 p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-slate-300 transition-all cursor-pointer",
-                entry.status === 'done' && "bg-slate-50/50 border-slate-100"
-            )}
-        >
-            {/* Checkbox */}
-            <button
-                onClick={toggleStatus}
-                disabled={isToggling}
-                className="flex-shrink-0 transition-transform hover:scale-110"
-            >
-                {getStatusIcon()}
-            </button>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-                <p className={cn(
-                    "text-slate-900 font-medium transition-all",
-                    entry.status === 'done' && "line-through text-slate-400"
-                )}>
-                    {entry.content}
-                </p>
-                <div className="flex items-center gap-3 mt-1">
-                    <span className="text-xs text-slate-400 flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true, locale: ptBR })}
-                    </span>
-                    {entry.status === 'in_progress' && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 font-medium">
-                            Em Progresso
-                        </span>
-                    )}
-                </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                    onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                    className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-all"
-                >
-                    <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                    onClick={deleteEntry}
-                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                >
-                    <Trash2 className="h-4 w-4" />
-                </button>
-            </div>
-        </motion.div>
     )
 }
