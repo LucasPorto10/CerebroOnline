@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useRef } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Brain, Target, Zap, Shield, Sparkles, ChevronDown } from 'lucide-react'
@@ -24,28 +24,29 @@ export default function LandingPage() {
                 initial={{ y: -100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.5, duration: 0.8 }}
-                className="fixed top-6 left-1/2 -translate-x-1/2 z-50"
+                className="fixed top-6 left-0 right-0 z-50 flex justify-center px-6"
             >
-                <nav className="flex items-center gap-8 px-8 py-4 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
+                <nav className="flex items-center gap-4 sm:gap-8 px-6 sm:px-8 py-4 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-2xl shadow-slate-900/10">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xl shadow-lg shadow-indigo-500/30">
                             🧠
                         </div>
-                        <span className="font-bold text-lg hidden sm:block">CerebroOnline</span>
+                        <span className="font-bold text-lg text-slate-900 dark:text-white hidden sm:block">CerebroOnline</span>
                     </div>
                     
-                    <div className="hidden md:flex items-center gap-6 text-sm text-slate-400">
-                        <a href="#features" className="hover:text-white transition-colors">Recursos</a>
-                        <a href="#how" className="hover:text-white transition-colors">Como Funciona</a>
+                    <div className="hidden md:flex items-center gap-6 text-sm text-slate-600 dark:text-slate-400">
+                        <a href="#features" className="hover:text-indigo-600 dark:hover:text-white transition-colors">Recursos</a>
+                        <a href="#how" className="hover:text-indigo-600 dark:hover:text-white transition-colors">Como Funciona</a>
                     </div>
 
                     <Link to="/auth">
-                        <Button size="sm" className="rounded-full bg-white text-slate-900 hover:bg-slate-100 font-semibold px-6">
+                        <Button size="sm" className="rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold px-6 shadow-lg shadow-indigo-500/25">
                             Entrar
                         </Button>
                     </Link>
                 </nav>
             </motion.header>
+
 
             {/* Hero Section */}
             <motion.section 

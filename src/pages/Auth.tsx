@@ -62,6 +62,7 @@ export default function AuthPage() {
                     email: data.email,
                     password: data.password,
                     options: {
+                        emailRedirectTo: `${window.location.origin}/dashboard`,
                         data: {
                             full_name: data.fullName || data.email.split('@')[0],
                             avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${data.fullName || data.email}`,
@@ -69,7 +70,7 @@ export default function AuthPage() {
                     },
                 })
                 if (error) throw error
-                toast.success('Conta criada! Faça login para continuar.')
+                toast.success('Conta criada! Verifique seu email para confirmar.')
                 setIsLogin(true) // Switch to login after signup
                 reset()
             }
