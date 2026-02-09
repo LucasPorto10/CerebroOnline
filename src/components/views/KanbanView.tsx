@@ -22,7 +22,8 @@ interface Column {
     borderColor: string
 }
 
-const columns: Column[] = [
+// Configuration for Status Columns
+const statusColumns: Column[] = [
     { 
         id: 'pending', 
         title: 'Pendente', 
@@ -46,10 +47,46 @@ const columns: Column[] = [
     },
 ]
 
+// Configuration for Priority Columns
+const priorityColumns: Column[] = [
+    {
+        id: 'urgent',
+        title: 'Urgente',
+        color: 'text-rose-500',
+        bgColor: 'bg-rose-500/10',
+        borderColor: 'border-rose-500/20'
+    },
+    {
+        id: 'high',
+        title: 'Alta',
+        color: 'text-orange-500',
+        bgColor: 'bg-orange-500/10',
+        borderColor: 'border-orange-500/20'
+    },
+    {
+        id: 'medium',
+        title: 'Média',
+        color: 'text-amber-500',
+        bgColor: 'bg-amber-500/10',
+        borderColor: 'border-amber-500/20'
+    },
+    {
+        id: 'low',
+        title: 'Baixa',
+        color: 'text-slate-500',
+        bgColor: 'bg-slate-500/10',
+        borderColor: 'border-slate-500/20'
+    }
+]
+
+type GroupBy = 'status' | 'priority'
+
 export function KanbanView() {
     const [editingEntry, setEditingEntry] = useState<Entry | null>(null)
     const [draggedEntry, setDraggedEntry] = useState<Entry | null>(null)
     const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null })
+    const [groupBy, setGroupBy] = useState<GroupBy>('status')
+    
     const queryClient = useQueryClient()
 
     const { data: entries, isLoading } = useQuery<Entry[]>({
@@ -82,6 +119,63 @@ export function KanbanView() {
         }
     })
 
+    const updatePriorityMutation = useMutation({
+        mutationFn: async ({ id, priority, entry }: { id: string; priority: string; entry: Entry }) => {
+            // Optimistic update helper if needed, but we rely on invalidation for now
+            const currentMetadata = entry.metadata as any || {}
+            
+            // SUPER IMPORTANT: Update BOTH the top-level 'priority' column AND the metadata field.
+            // This ensures consistency across different views and filters.
+            const { error } = await (supabase as any)
+                .from('entries')
+                // @ts-ignore
+                .update({ 
+                    priority: priority,
+                    metadata: { ...currentMetadata, priority } 
+                })
+                .eq('id', id)
+            if (error) throw error
+        },
+        onSuccess: () => {
+             queryClient.invalidateQueries({ queryKey: ['entries'] })
+             toast.success('Prioridade atualizada')
+        },
+        onError: () => {
+            toast.error('Erro ao atualizar prioridade')
+        }
+    })
+
+    const updateChecklistMutation = useMutation({
+        mutationFn: async ({ id, checklist }: { id: string; checklist: any[] }) => {
+            const { error } = await (supabase as any)
+                .from('entries')
+                .update({ checklist })
+                .eq('id', id)
+            if (error) throw error
+        },
+        onSuccess: () => {
+             queryClient.invalidateQueries({ queryKey: ['entries'] })
+        },
+        onError: () => {
+            toast.error('Erro ao atualizar checklist')
+        }
+    })
+
+    const handleToggleChecklist = (entry: Entry, itemIndex: number) => {
+        const currentChecklist = (entry as any).checklist || []
+        const newChecklist = [...currentChecklist]
+        
+        // Handle both string and object formats
+        const item = newChecklist[itemIndex]
+        if (typeof item === 'string') {
+            newChecklist[itemIndex] = { text: item, done: true }
+        } else {
+            newChecklist[itemIndex] = { ...item, done: !item.done }
+        }
+
+        updateChecklistMutation.mutate({ id: entry.id, checklist: newChecklist })
+    }
+
     const deleteEntry = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation()
         const { error } = await (supabase as any).from('entries').delete().eq('id', id)
@@ -103,12 +197,26 @@ export function KanbanView() {
     }
 
     const handleDrop = (columnId: string) => {
-        if (draggedEntry && draggedEntry.status !== columnId) {
-            updateStatusMutation.mutate({ 
-                id: draggedEntry.id, 
-                status: columnId as Entry['status'] 
-            })
-            toast.success(`Movido para ${columns.find(c => c.id === columnId)?.title}`)
+        if (!draggedEntry) return
+
+        if (groupBy === 'status') {
+            if (draggedEntry.status !== columnId) {
+                updateStatusMutation.mutate({ 
+                    id: draggedEntry.id, 
+                    status: columnId as Entry['status'] 
+                })
+                toast.success(`Movido para ${statusColumns.find(c => c.id === columnId)?.title}`)
+            }
+        } else {
+            // Group by Priority
+            const currentPriority = (draggedEntry.metadata as any)?.priority || 'medium'
+            if (currentPriority !== columnId) {
+                updatePriorityMutation.mutate({
+                    id: draggedEntry.id,
+                    priority: columnId,
+                    entry: draggedEntry
+                })
+            }
         }
         setDraggedEntry(null)
     }
@@ -123,7 +231,16 @@ export function KanbanView() {
     })
 
     const getColumnEntries = (columnId: string) => {
-        return filteredEntries?.filter(entry => entry.status === columnId) || []
+        if (groupBy === 'status') {
+             return filteredEntries?.filter(entry => entry.status === columnId) || []
+        } else {
+            return filteredEntries?.filter(entry => {
+                const p = (entry.metadata as any)?.priority || 'medium'
+                // Handle cases where priority might be null or missing
+                if (columnId === 'medium' && !p) return true 
+                return p === columnId
+            }) || []
+        }
     }
 
     // Auto assign emojis
@@ -131,6 +248,8 @@ export function KanbanView() {
 
     // Get dates for calendar
     const datesWithEntries = useMemo(() => entries?.map(e => e.created_at) || [], [entries])
+
+    const activeColumns = groupBy === 'status' ? statusColumns : priorityColumns
 
     if (isLoading) {
         return (
@@ -152,16 +271,47 @@ export function KanbanView() {
                         <div>
                             <h2 className="text-2xl font-bold tracking-tight text-foreground">Kanban</h2>
                             <p className="text-sm text-muted-foreground">
-                                Arraste as tarefas entre as colunas
+                                Gerencie suas tarefas por {groupBy === 'status' ? 'Status' : 'Prioridade'}
                             </p>
                         </div>
                     </div>
-                    <DateFilter value={dateRange} onChange={setDateRange} datesWithEntries={datesWithEntries} />
+                    
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center p-1 bg-muted rounded-lg border border-border">
+                            <button
+                                onClick={() => setGroupBy('status')}
+                                className={cn(
+                                    "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
+                                    groupBy === 'status' 
+                                        ? "bg-background text-foreground shadow-sm" 
+                                        : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                Status
+                            </button>
+                            <button
+                                onClick={() => setGroupBy('priority')}
+                                className={cn(
+                                    "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
+                                    groupBy === 'priority' 
+                                        ? "bg-background text-foreground shadow-sm" 
+                                        : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                Prioridade
+                            </button>
+                        </div>
+
+                        <DateFilter value={dateRange} onChange={setDateRange} datesWithEntries={datesWithEntries} />
+                    </div>
                 </div>
 
                 {/* Kanban Board */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {columns.map((column) => (
+                <div className={cn(
+                    "grid gap-6 transition-all duration-300",
+                    groupBy === 'status' ? "grid-cols-1 md:grid-cols-3" : "grid-cols-1 sm:grid-cols-2 md:grid-cols-4"
+                )}>
+                    {activeColumns.map((column) => (
                         <KanbanColumn
                             key={column.id}
                             column={column}
@@ -169,9 +319,14 @@ export function KanbanView() {
                             onDragStart={handleDragStart}
                             onDragEnd={handleDragEnd}
                             onDrop={() => handleDrop(column.id)}
-                            isDragOver={draggedEntry !== null && draggedEntry.status !== column.id}
+                            isDragOver={draggedEntry !== null && (
+                                groupBy === 'status' 
+                                    ? draggedEntry.status !== column.id
+                                    : ((draggedEntry.metadata as any)?.priority || 'medium') !== column.id
+                            )}
                             onEdit={setEditingEntry}
                             onDelete={deleteEntry}
+                            onToggleChecklist={handleToggleChecklist}
                         />
                     ))}
                 </div>
@@ -205,6 +360,7 @@ export function KanbanView() {
     )
 }
 
+// FIX: Add onToggleChecklist to props
 interface KanbanColumnProps {
     column: Column
     entries: Entry[]
@@ -214,6 +370,7 @@ interface KanbanColumnProps {
     isDragOver: boolean
     onEdit: (entry: Entry) => void
     onDelete: (id: string, e: React.MouseEvent) => void
+    onToggleChecklist: (entry: Entry, itemIndex: number) => void
 }
 
 function KanbanColumn({ 
@@ -224,7 +381,8 @@ function KanbanColumn({
     onDrop, 
     isDragOver,
     onEdit,
-    onDelete 
+    onDelete,
+    onToggleChecklist 
 }: KanbanColumnProps) {
     const [isOver, setIsOver] = useState(false)
 
@@ -277,6 +435,7 @@ function KanbanColumn({
                             onDragEnd={onDragEnd}
                             onEdit={() => onEdit(entry)}
                             onDelete={onDelete}
+                            onToggleChecklist={onToggleChecklist}
                         />
                     ))}
                 </AnimatePresence>
@@ -301,16 +460,21 @@ interface KanbanCardProps {
     onDragEnd: () => void
     onEdit: () => void
     onDelete: (id: string, e: React.MouseEvent) => void
+    onToggleChecklist: (entry: Entry, itemIndex: number) => void
 }
 
-function KanbanCard({ entry, index, onDragStart, onDragEnd, onEdit, onDelete }: KanbanCardProps) {
-    const priority = (entry as any).priority || 'medium'
+function KanbanCard({ entry, index, onDragStart, onDragEnd, onEdit, onDelete, onToggleChecklist }: KanbanCardProps) {
+    // FIX: Read priority from metadata to match column filtering logic and ensure sync with mutation
+    const priority = (entry.metadata as any)?.priority || 'medium'
     
+    // We can keep the card rendering mostly the same, 
+    // maybe we want to emphasize priority less if we are IN the priority view?
+    // For now, consistent card design is good.
     const priorityConfig = {
         urgent: { color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/20', label: 'Urgente' },
         high: { color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20', label: 'Alta' },
         medium: { color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20', label: 'Média' },
-        low: { color: 'text-muted-foreground', bg: 'bg-muted', border: 'border-border', label: 'Baixa' }
+        low: { color: 'text-slate-500', bg: 'bg-slate-500/10', border: 'border-slate-500/20', label: 'Baixa' }
     }[priority as string] || { color: 'text-muted-foreground', bg: 'bg-muted', border: 'border-border', label: 'Normal' }
 
     return (
@@ -342,10 +506,7 @@ function KanbanCard({ entry, index, onDragStart, onDragEnd, onEdit, onDelete }: 
                 <div className="flex-1 min-w-0">
                     {/* Header: Priority + Emoji */}
                     <div className="flex items-center justify-between mb-2">
-                        <div className={cn(
-                            "flex-shrink-0 flex items-center justify-center transition-all",
-                            !(entry.metadata as any)?.emoji && "animate-pulse"
-                        )}>
+                        <div className="flex-shrink-0 flex items-center justify-center transition-all">
                             {(entry.metadata as any)?.emoji || <Sparkles className="h-3 w-3 text-slate-300" />}
                         </div>
                         {priority !== 'medium' && priority !== 'low' && (
@@ -373,6 +534,48 @@ function KanbanCard({ entry, index, onDragStart, onDragEnd, onEdit, onDelete }: 
                         {entry.content}
                     </p>
                     
+                    {/* Checklist */}
+                    {(entry as any).checklist && (entry as any).checklist.length > 0 && (
+                        <div className="mb-3 space-y-1">
+                            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mb-1.5">
+                                <span className="bg-primary/10 text-primary p-0.5 rounded">
+                                    ✓
+                                </span>
+                                Checklist
+                            </div>
+                            {(entry as any).checklist.slice(0, 3).map((item: any, idx: number) => {
+                                const isObject = typeof item === 'object'
+                                const text = isObject ? item.text : item
+                                const isDone = isObject ? item.done : false
+                                
+                                return (
+                                    <div 
+                                        key={idx} 
+                                        className="flex items-start gap-2 text-xs text-muted-foreground group cursor-pointer hover:text-foreground transition-colors"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            // Call parent handler
+                                            onToggleChecklist(entry, idx)
+                                        }}
+                                    >
+                                        <div className={cn(
+                                            "min-w-[12px] h-[12px] rounded-sm border mt-0.5 flex items-center justify-center transition-colors",
+                                            isDone ? "bg-primary border-primary" : "border-border group-hover:border-primary"
+                                        )}>
+                                            {isDone && <div className="w-1.5 h-1.5 bg-primary-foreground rounded-[1px]" />}
+                                        </div>
+                                        <span className={cn("line-clamp-1 transition-opacity", isDone && "line-through opacity-50")}>{text}</span>
+                                    </div>
+                                )
+                            })}
+                            {(entry as any).checklist.length > 3 && (
+                                <div className="text-[10px] text-muted-foreground pl-5">
+                                    + {(entry as any).checklist.length - 3} itens
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Tags */}
                     {(entry.metadata as any)?.tags && (
                         <div className="flex flex-wrap gap-1 mb-3">

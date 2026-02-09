@@ -7,12 +7,12 @@ import { cn } from '@/lib/utils'
 import { GoalCard, Goal } from '@/components/features/GoalCard'
 import { AddGoalDialog, NewGoal } from '@/components/features/AddGoalDialog'
 import { GoalDetailView } from '@/components/features/GoalDetailView'
-import { startOfWeek, startOfMonth, format, addWeeks, subWeeks, addMonths, subMonths, parseISO } from 'date-fns'
+import { startOfWeek, startOfMonth, format, addWeeks, subWeeks, addMonths, subMonths, parseISO, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { toast } from 'sonner'
 import { useAuth } from '@/providers/auth-provider'
 
-type PeriodType = 'weekly' | 'monthly'
+type PeriodType = 'daily' | 'weekly' | 'monthly'
 
 export default function Goals() {
     const { user } = useAuth()
@@ -21,10 +21,16 @@ export default function Goals() {
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
     const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
     const [detailGoal, setDetailGoal] = useState<Goal | null>(null)
+    const [currentDayOffset, setCurrentDayOffset] = useState(0)
     const [currentWeekOffset, setCurrentWeekOffset] = useState(0)
     const [currentMonthOffset, setCurrentMonthOffset] = useState(0)
 
     // Calculate period start dates
+    const dayStart = useMemo(() => {
+        const base = new Date()
+        return currentDayOffset === 0 ? base : addDays(base, currentDayOffset)
+    }, [currentDayOffset])
+
     const weekStart = useMemo(() => {
         const base = startOfWeek(new Date(), { weekStartsOn: 1 })
         return currentWeekOffset === 0 ? base : 
@@ -37,7 +43,7 @@ export default function Goals() {
             currentMonthOffset > 0 ? addMonths(base, currentMonthOffset) : subMonths(base, Math.abs(currentMonthOffset))
     }, [currentMonthOffset])
 
-    const currentPeriodStart = activeTab === 'weekly' ? weekStart : monthStart
+    const currentPeriodStart = activeTab === 'daily' ? dayStart : (activeTab === 'weekly' ? weekStart : monthStart)
 
     // Fetch goals
     const { data: goals = [], isLoading } = useQuery<Goal[]>({
@@ -47,6 +53,14 @@ export default function Goals() {
                 .from('goals')
                 .select('*')
                 .eq('period_type', activeTab)
+                // For daily goals, we ideally want to see goals active for this day.
+                // But for now, let's match the creation logic: strict equality on period_start
+                // Or maybe we want to see ALL daily goals regardless of start date? 
+                // Usually daily goals are recurring. 
+                // IF it's a "habit" type goal (recurring), it effectively "starts" fresh every day.
+                // But in the database we only insert ONE row per goal definition?
+                // Wait, useCapture creates a NEW row with period_start = today.
+                // So strict equality is correct for how checking works currently.
                 .eq('period_start', format(currentPeriodStart, 'yyyy-MM-dd'))
                 .order('created_at', { ascending: false })
 
@@ -149,7 +163,11 @@ export default function Goals() {
             if (!user?.id) throw new Error('Not authenticated')
             const dateStr = format(date, 'yyyy-MM-dd')
             
-                // Check if already completed
+            // Find the goal to get current value
+            const goal = goals.find(g => g.id === goalId)
+            if (!goal) throw new Error('Goal not found')
+
+            // Check if already completed
             const { data: existing, error: fetchError } = await (supabase as any)
                 .from('goal_completions')
                 .select('id')
@@ -161,22 +179,38 @@ export default function Goals() {
 
             if (existing) {
                 // Remove completion
-                const { error } = await (supabase as any)
+                const { error: deleteError } = await (supabase as any)
                     .from('goal_completions')
                     .delete()
                     .eq('id', existing.id)
-                if (error) throw error
+                if (deleteError) throw deleteError
+
+                // Decrement current
+                const { error: updateError } = await (supabase as any)
+                    .from('goals')
+                    .update({ current: Math.max(0, goal.current - 1) })
+                    .eq('id', goalId)
+                if (updateError) throw updateError
+
             } else {
                 // Add completion
-                const { error } = await (supabase as any)
+                const { error: insertError } = await (supabase as any)
                     .from('goal_completions')
                     .insert({ goal_id: goalId, user_id: user.id, completed_date: dateStr })
-                if (error) throw error
+                if (insertError) throw insertError
+
+                // Increment current
+                const { error: updateError } = await (supabase as any)
+                    .from('goals')
+                    .update({ current: goal.current + 1 })
+                    .eq('id', goalId)
+                if (updateError) throw updateError
             }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['goal_completions'] })
-            toast.success('Registro atualizado! ✅')
+            queryClient.invalidateQueries({ queryKey: ['goals'] })
+            toast.success('Progresso atualizado! 📈')
         },
         onError: () => toast.error('Erro ao atualizar registro')
     })
@@ -196,6 +230,9 @@ export default function Goals() {
         : 0
 
     const getPeriodLabel = () => {
+        if (activeTab === 'daily') {
+             return format(dayStart, "d 'de' MMMM", { locale: ptBR })
+        }
         if (activeTab === 'weekly') {
             const weekEnd = addWeeks(weekStart, 1)
             return `${format(weekStart, "d 'de' MMM", { locale: ptBR })} - ${format(weekEnd, "d 'de' MMM", { locale: ptBR })}`
@@ -204,7 +241,9 @@ export default function Goals() {
     }
 
     const navigatePeriod = (direction: 'prev' | 'next') => {
-        if (activeTab === 'weekly') {
+        if (activeTab === 'daily') {
+            setCurrentDayOffset(prev => direction === 'next' ? prev + 1 : prev - 1)
+        } else if (activeTab === 'weekly') {
             setCurrentWeekOffset(prev => direction === 'next' ? prev + 1 : prev - 1)
         } else {
             setCurrentMonthOffset(prev => direction === 'next' ? prev + 1 : prev - 1)
@@ -250,7 +289,7 @@ export default function Goals() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card border border-border rounded-2xl p-3">
                 {/* Period Tabs */}
                 <div className="flex items-center gap-1 p-1 bg-muted rounded-xl">
-                    {(['weekly', 'monthly'] as const).map((tab) => (
+                    {(['daily', 'weekly', 'monthly'] as const).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -261,8 +300,10 @@ export default function Goals() {
                                     : "text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            {tab === 'weekly' ? <Calendar className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
-                            {tab === 'weekly' ? 'Semanais' : 'Mensais'}
+                            {tab === 'daily' && <Sparkles className="h-4 w-4" />}
+                            {tab === 'weekly' && <Calendar className="h-4 w-4" />}
+                            {tab === 'monthly' && <TrendingUp className="h-4 w-4" />}
+                            {tab === 'daily' ? 'Diárias' : (tab === 'weekly' ? 'Semanais' : 'Mensais')}
                         </button>
                     ))}
                 </div>
@@ -316,7 +357,7 @@ export default function Goals() {
                         </div>
                         <p className="font-semibold text-foreground text-lg">Nenhuma meta ainda</p>
                         <p className="text-sm text-muted-foreground mt-1 mb-6">
-                            Crie sua primeira meta {activeTab === 'weekly' ? 'semanal' : 'mensal'}
+                            Crie sua primeira meta {activeTab === 'daily' ? 'diária' : (activeTab === 'weekly' ? 'semanal' : 'mensal')}
                         </p>
                         <motion.button
                             whileHover={{ scale: 1.02 }}

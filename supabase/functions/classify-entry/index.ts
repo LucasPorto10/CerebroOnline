@@ -4,6 +4,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 Deno.serve(async (req: Request) => {
@@ -42,34 +43,54 @@ Você é um assistente inteligente que classifica textos para o app CerebroOnlin
 ### 1. PRIORIDADE (MUITO IMPORTANTE - ANALISE COM CUIDADO!)
 Procure ATIVAMENTE por palavras-chave de prioridade no texto:
 
-**URGENTE (urgent):** "urgente", "urgência", "agora", "imediato", "asap", "crítico", "emergência"
+**URGENTE (urgent):** "urgente", "urgência", "agora", "imediato", "asap", "crítico", "emergência", "pra ontem"
 **ALTA (high):** "importante", "prioridade", "essencial", "necessário", "preciso muito"  
-**MÉDIA (medium):** "quando puder", "sem pressa", "normal"
+**MÉDIA (medium):** "quando puder", "sem pressa", "normal", "depois"
 **BAIXA (low):** "talvez", "um dia", "se der tempo", "opcional"
 
-⚠️ SE O TEXTO CONTIVER A PALAVRA "URGENTE" OU SIMILAR, A PRIORIDADE DEVE SER "urgent"!
-⚠️ NÃO USE "medium" COMO PADRÃO! Use null se não houver indicação clara.
+⚠️ REGRA ABSOLUTA: Se o texto contiver "URGENTE" ou "PRA ONTEM", a prioridade DEVE ser "urgent" e o tipo DEVE ser "task".
+⚠️ VERBOS DE AÇÃO = TASK: Se começar com verbo no infinitivo ou imperativo (ex: "comprar", "fazer", "ir", "ligar", "pagar", "agendar", "tomar"), o tipo DEVE ser "task".
+⚠️ CATEGORIA PADRÃO: Se não souber classificar, use "ideas" ou "home".
+⚠️ TIPO PADRÃO: Se parecer uma ação, é "task". Se for informação, é "note".
 
 ### 2. DATA DE VENCIMENTO
 Se houver menção temporal (ex: "amanhã", "sexta", "semana que vem"), calcule a data ISO 8601.
 
-### 3. IDIOMA
-TUDO em PORTUGUÊS DO BRASIL (tags, resumo, etc.)
+### 4. STATUS (Estado da Tarefa)
+Analise se a ação já foi feita ou está em andamento:
+- **pending** (Padrão): "preciso fazer", "vou comprar", "fazer tal coisa"
+- **in_progress**: "estou fazendo", "terminando", "comecei a", "em andamento", "fazendo", "vendo", "lendo"
+- **done**: "já fiz", "terminei", "concluído", "pago", "comprado", "feito"
+
+
+## REGRAS DE EXTRAÇÃO DE METAS E CHECKLISTS
+
+### 5. METAS (GOALS)
+Se for uma META, defina period_type:
+- **daily**: "todo dia", "diariamente", "3x por dia", "beber agua hoje"
+- **weekly**: "semana", "semanal", "3x na semana"
+- **monthly**: "mês", "mensal"
+
+### 6. CHECKLISTS / SUB-ITENS
+Se a tarefa tiver múltiplos itens (ex: "comprar: leite, ovos, pão"), crie um checklist.
+ARRAY de objetos: [{ "text": "item desc", "done": false }]
 
 ## RESPOSTA (apenas JSON válido):
 {
-  "_thought_process": "análise detalhada da prioridade encontrada",
+  "_thought_process": "análise detalhada...",
   "category_slug": "home|work|uni|ideas",
   "entry_type": "task|note|insight|bookmark|goal",
+  "status": "pending|in_progress|done",
   "metadata": {
     "summary": "resumo curto",
     "tags": ["tag1", "tag2"],
     "emoji": "🎯",
     "target": null,
     "unit": null,
-    "period_type": null,
+    "period_type": "daily|weekly|monthly|null",
     "due_date": null,
-    "priority": "low|medium|high|urgent|null"
+    "priority": "low|medium|high|urgent|null",
+    "checklist": [{ "text": "item 1", "done": false }]
   }
 }
 

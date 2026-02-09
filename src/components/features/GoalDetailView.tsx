@@ -73,25 +73,25 @@ export function GoalDetailView({
                                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                                className="w-full max-w-lg pointer-events-auto"
+                                className="w-full max-w-md pointer-events-auto"
                             >
                                 <div className="bg-card rounded-3xl shadow-2xl overflow-hidden border border-border">
                                     {/* Header */}
                                     <div className={cn(
-                                        "relative px-6 py-6",
+                                        "relative px-6 py-7",
                                         isComplete 
                                             ? "bg-gradient-to-br from-emerald-500 to-emerald-600"
                                             : "bg-gradient-to-br from-slate-800 to-slate-900"
                                     )}>
                                         <div className="flex items-start justify-between">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center text-4xl">
+                                                <div className="w-14 h-14 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center text-3xl">
                                                     {goal.emoji}
                                                 </div>
                                                 <div className="text-white">
                                                     <h2 className="font-bold text-xl">{goal.title}</h2>
                                                     <p className="text-white/70 text-sm mt-0.5">
-                                                        {goal.period_type === 'weekly' ? 'Meta Semanal' : 'Meta Mensal'}
+                                                        {goal.period_type === 'daily' ? 'Meta Diária' : (goal.period_type === 'weekly' ? 'Meta Semanal' : 'Meta Mensal')}
                                                     </p>
                                                     {isComplete && (
                                                         <motion.span 
@@ -113,7 +113,7 @@ export function GoalDetailView({
                                         </div>
 
                                         {/* Progress indicator */}
-                                        <div className="mt-6">
+                                        <div className="mt-4">
                                             <div className="flex items-center justify-between text-white/90 mb-2">
                                                 <span className="text-sm font-medium">{goal.current} de {goal.target} {goal.unit}</span>
                                                 <span className="text-sm font-bold">{Math.round(percentage)}%</span>
@@ -130,7 +130,7 @@ export function GoalDetailView({
                                     </div>
 
                                     {/* Content */}
-                                    <div className="p-6 space-y-6">
+                                    <div className="px-6 py-5 space-y-6">
                                         {/* Stats Grid */}
                                         <div className="grid grid-cols-3 gap-3">
                                             <div className="bg-muted/50 rounded-xl p-3 text-center">
@@ -160,7 +160,7 @@ export function GoalDetailView({
 
                                         {/* Calendar */}
                                         <div>
-                                            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                                            <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
                                                 <Calendar className="h-4 w-4" />
                                                 Registro de Atividade
                                             </h3>
